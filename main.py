@@ -25,16 +25,18 @@ os.environ["KMP_BLOCKTIME"] = "30"
 os.environ["KMP_SETTINGS"] = "1"
 os.environ["KMP_AFFINITY"]= "granularity=fine,verbose,compact,1,0"
 
-train_datagen = ImageDataGenerator(rescale=1. / 255, rotation_range=25, width_shift_range=0.25,
-                                   height_shift_range=0.25,shear_range=0.25, zoom_range=0.15)
+train_datagen = ImageDataGenerator(rescale=1. / 255)
 test_datagen = ImageDataGenerator(rescale=1. / 255)
 
-train_generator = train_datagen.flow_from_directory('chest_xray/train', color_mode='grayscale',
+train_generator = train_datagen.flow_from_directory('chest_xray_aug/train', color_mode='grayscale',
                                                     target_size=(img_width, img_height), batch_size=64, class_mode='binary')
-validation_generator = test_datagen.flow_from_directory('chest_xray/test', target_size=(img_width, img_height), batch_size=64,
+validation_generator = test_datagen.flow_from_directory('chest_xray_aug/test', target_size=(img_width, img_height), batch_size=64,
                                                         class_mode='binary', color_mode='grayscale')
 
 kernel_sizes = 3
+dense_count = 512
+learning_rate = 0.00001
+suffix = '1'
 
 model = models.Sequential()
 model.add(layers.Conv2D(8, (kernel_sizes, kernel_sizes), activation='relu', input_shape=(img_width, img_height, 1)))
@@ -51,18 +53,18 @@ model.add(layers.MaxPooling2D((2, 2)))
 #model.add(layers.MaxPooling2D((2, 2)))
 model.add(layers.Flatten())
 model.add(layers.Dropout(0.3))
-model.add(layers.Dense(512, activation='relu', kernel_regularizer=regularizers.l2(0.010)))
-model.add(layers.Dense(512, activation='relu', kernel_regularizer=regularizers.l2(0.010)))
+model.add(layers.Dense(dense_count, activation='relu', kernel_regularizer=regularizers.l2(0.010)))
+model.add(layers.Dense(dense_count, activation='relu', kernel_regularizer=regularizers.l2(0.010)))
 model.add(layers.Dense(1, activation='sigmoid'))
-model.compile(loss='binary_crossentropy', optimizer=optimizers.RMSprop(0.0001), metrics=['acc'])
+model.compile(loss='binary_crossentropy', optimizer=optimizers.RMSprop(learning_rate), metrics=['acc'])
 model.summary()
 
-history = model.fit_generator(train_generator, steps_per_epoch=200, epochs=30, validation_data=validation_generator,
+history = model.fit_generator(train_generator, steps_per_epoch=160, epochs=50, validation_data=validation_generator,
                               validation_steps=10, verbose=1)
 print('Saving...')
-with open('f_010_4_512' + str(kernel_sizes) +'.pkl', 'wb') as f:
+with open('ff'+ str(dense_count) + '_' + suffix + '.pkl', 'wb') as f:
     pickle.dump(history.history, f)
-model.save('f_010_4_512' + str(kernel_sizes) + '.h5')
+model.save('ff'+ str(dense_count) +'_' + suffix + '.h5')
 
 
 

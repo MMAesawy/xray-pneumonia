@@ -24,20 +24,19 @@ os.environ["KMP_BLOCKTIME"] = "30"
 os.environ["KMP_SETTINGS"] = "1"
 os.environ["KMP_AFFINITY"]= "granularity=fine,verbose,compact,1,0"
 
-train_datagen = ImageDataGenerator(rescale=1. / 255, rotation_range=25, width_shift_range=0.25,
-                                   height_shift_range=0.25,shear_range=0.25, zoom_range=0.15)
+train_datagen = ImageDataGenerator(rescale=1. / 255)
 test_datagen = ImageDataGenerator(rescale=1. / 255)
 
-train_generator = train_datagen.flow_from_directory('chest_xray/train', color_mode='grayscale',
-                                                    target_size=(img_width, img_height), batch_size=32, class_mode='binary')
-validation_generator = test_datagen.flow_from_directory('chest_xray/test', target_size=(img_width, img_height), batch_size=32,
+train_generator = train_datagen.flow_from_directory('chest_xray_aug/train', color_mode='grayscale',
+                                                    target_size=(img_width, img_height), batch_size=64, class_mode='binary')
+validation_generator = test_datagen.flow_from_directory('chest_xray_aug/test', target_size=(img_width, img_height), batch_size=64,
                                                         class_mode='binary', color_mode='grayscale')
 
-model = models.load_model('f_010_4_5123_cont4.h5')
+model = models.load_model('ff512_2.h5')
 
-history = model.fit_generator(train_generator, steps_per_epoch=200, epochs=50, validation_data=validation_generator,
-                              validation_steps=19, verbose=1)
-model.save('f_010_4_5123_cont5.h5')
-with open('f_010_4_5123_cont5.pkl', 'wb') as f:
+history = model.fit_generator(train_generator, steps_per_epoch=160, epochs=50, validation_data=validation_generator,
+                              validation_steps=10, verbose=1)
+model.save('ff512_2_2.h5')
+with open('ff512_2_2.pkl', 'wb') as f:
     pickle.dump(history.history, f)
 

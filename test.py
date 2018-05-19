@@ -17,24 +17,20 @@ import seaborn as sns
 img_width = 250
 img_height = 325
 test_datagen = ImageDataGenerator(rescale=1. / 255)
-test_generator = test_datagen.flow_from_directory('chest_xray/val', target_size=(img_width, img_height), batch_size=32,
+test_generator = test_datagen.flow_from_directory('chest_xray/val', target_size=(img_width, img_height), batch_size=1,
                                                         class_mode='binary', color_mode='grayscale')
-
-model = models.load_model('f_010_4_5123_cont5.h5')
-print(model.summary())
-test_loss, test_acc = model.evaluate_generator(test_generator, steps=3)
+main_path = 'ff512_2_2'
+model = models.load_model(main_path + '.h5')
+test_loss, test_acc = model.evaluate_generator(test_generator, steps=116)
 print(test_acc)
 y_data = test_generator.next()
 print(len(y_data[0]))
 y_test, y_true = y_data[0], y_data[1]
-y_data = test_generator.next()
-t0, t1  = y_data[0], y_data[1]
-y_test = np.concatenate((y_test, t0), axis = 0)
-y_true = np.concatenate((y_true, t1), axis = 0)
-y_data = test_generator.next()
-t0, t1  = y_data[0], y_data[1]
-y_test = np.concatenate((y_test, t0), axis = 0)
-y_true = np.concatenate((y_true, t1), axis = 0)
+for i in range(1, 116):
+    y_data = test_generator.next()
+    t0, t1  = y_data[0], y_data[1]
+    y_test = np.concatenate((y_test, t0), axis = 0)
+    y_true = np.concatenate((y_true, t1), axis = 0)
 
 print(y_test.shape)
 print(y_true.shape)

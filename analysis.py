@@ -15,14 +15,27 @@ from keras import regularizers
 from datetime import datetime
 histories = []
 
-histories.append(pickle.load(open('f_010_4_5123.pkl', 'rb')))
-histories.append(pickle.load(open('f_010_4_5123_cont.pkl', 'rb')))
-histories.append(pickle.load(open('f_010_4_5123_cont2.pkl', 'rb')))
-histories.append(pickle.load(open('f_010_4_5123_cont3.pkl', 'rb')))
-histories.append(pickle.load(open('f_010_4_5123_cont4.pkl', 'rb')))
-histories.append(pickle.load(open('f_010_4_5123_cont5.pkl', 'rb')))
+main_path = 'ff512_2_2'
+histories.append(pickle.load(open(main_path + '.pkl', 'rb')))
+#histories.append(pickle.load(open('f_010_4_5123_cont.pkl', 'rb')))
+#histories.append(pickle.load(open('f_010_4_5123_cont2.pkl', 'rb')))
+#histories.append(pickle.load(open('f_010_4_5123_cont3.pkl', 'rb')))
+#histories.append(pickle.load(open('f_010_4_5123_cont4.pkl', 'rb')))
+#histories.append(pickle.load(open('f_010_4_5123_cont5.pkl', 'rb')))
+
+img_width = 250
+img_height = 325
+model = models.load_model(main_path + '.h5')
+
+test_datagen = ImageDataGenerator(rescale=1. / 255)
+test_generator = test_datagen.flow_from_directory('chest_xray/val', target_size=(img_width, img_height), batch_size=1,
+                                                        class_mode='binary', color_mode='grayscale')
 
 
+test_loss, test_acc = model.evaluate_generator(test_generator, steps=116)
+print (model.summary())
+print(model.optimizer.get_config())
+print('test acc:', test_acc)
 
 
 acc = histories[0]['acc']
@@ -53,34 +66,30 @@ plt.title('Training and validation loss')
 plt.legend()
 plt.show()
 
-img_width = 250
-img_height = 325
-model = models.load_model('f_010_4_5123_cont5.h5')
-'''
-test_datagen = ImageDataGenerator(rescale=1. / 255)
-test_generator = test_datagen.flow_from_directory('chest_xray/test', target_size=(img_width, img_height), batch_size=32,
-                                                        class_mode='binary', color_mode='grayscale')
 
 
-test_loss, test_acc = model.evaluate_generator(test_generator, steps=3)
-print('test acc:', test_acc)
-'''
 test_path = './chest_xray/val/PNEUMONIA/person405_bacteria_1817.jpeg'
+train_path = './chest_xray/val/NORMAL/IM-0487-0001.jpeg'
 
-img = image.load_img(test_path,  target_size=(img_width, img_height))
+img = image.load_img(train_path,  target_size=(img_width, img_height), grayscale=True)
+
 img_tensor = image.img_to_array(img)
 img_tensor = np.expand_dims(img_tensor, axis = 0)
 img_tensor /= 255.0
+print(model.predict(img_tensor, 1))
 print(img_tensor.shape)
 plt.figure()
-#np.broadcast_to(img_tensor[0], (img_tensor[0].shape[0], img_tensor[0].shape[1], img_tensor[0].shape[2], img_tensor[0].shape[3]+2))
+np.broadcast_to(img_tensor[0], (img_tensor[0].shape[0], img_tensor[0].shape[1], img_tensor[0].shape[2], img_tensor[0].shape[3]+2))
 plt.grid(False)
 plt.imshow(img_tensor[0])
 plt.show()
 model.summary()
 layer_outputs = [layer.output for layer in model.layers[:8]]
 activation_model = models.Model(inputs=model.input, outputs = layer_outputs)
+
 activations = activation_model.predict(img_tensor)
+
+print(model.predict(img_tensor))
 
 layer_names = []
 for layer in model.layers[:8]:
